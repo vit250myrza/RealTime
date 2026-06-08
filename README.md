@@ -2,6 +2,8 @@
 
 [![platform](https://img.shields.io/badge/platform-Android-green.svg)](https://www.android.com)
 [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)
+[![Build](https://github.com/vit250myrza/RealTime/actions/workflows/android.yml/badge.svg)](https://github.com/vit250myrza/RealTime/actions/workflows/android.yml)
+[![Download APK](https://img.shields.io/badge/Download-APK-blue?logo=android)](https://github.com/vit250myrza/RealTime/actions/workflows/android.yml)
 
 GPS-only fork of RealTime — a reliable time library for Android. Gets the current time from GPS satellites and maintains it across device clock changes until the next reboot. NTP and HTTP time server providers have been removed.
 
