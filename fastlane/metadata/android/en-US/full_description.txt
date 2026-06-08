@@ -1,0 +1,11 @@
+RealTime (GPS-only fork)
+
+Displays precise time from GPS satellites as an ISO 8601 timestamp with millisecond precision at your screen's native refresh rate (60 Hz, 90 Hz, 120 Hz, or higher).
+
+- Gets time exclusively from GPS satellites — no NTP servers, no network time
+- Compensates for GPS-to-app transport delay using Android's location timestamp API so the displayed time matches wall clock within ~1 ms
+- Caches the GPS time and maintains it even if the user changes the device clock
+- Automatically re-synchronizes after device reboot
+- Free and open source under GPL-3.0
+
+Requires location permission (ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION) to read GPS satellite time.

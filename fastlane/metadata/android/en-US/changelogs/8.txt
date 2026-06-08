@@ -1,0 +1,4 @@
+- GPS-only: removed NTP and HTTP time server providers
+- Display at native refresh rate (up to 120 Hz) using Choreographer
+- ISO 8601 timestamp with millisecond precision
+- GPS transport delay compensation via getElapsedRealtimeNanos()
