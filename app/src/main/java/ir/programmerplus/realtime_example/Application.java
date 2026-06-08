@@ -18,11 +18,6 @@ public class Application extends MultiDexApplication {
 
         RealTime.builder(this)
                 .withGpsProvider()
-                .withNtpServer("time.nist.gov")
-                .withNtpServer("time.google.com")
-                .withNtpServer("time.windows.com")
-                .withTimeServer("https://time.ir")
-                .withTimeServer("https://google.com")
                 .setLoggingEnabled(BuildConfig.DEBUG)
                 .setSyncBackoffDelay(30, TimeUnit.SECONDS)
                 .build(date -> Log.d(TAG, "RealTime is initialized, current dateTime: " + date));

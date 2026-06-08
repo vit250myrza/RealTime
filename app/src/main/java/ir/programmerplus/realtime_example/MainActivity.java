@@ -27,27 +27,24 @@ public class MainActivity extends AppCompatActivity {
 
         requestLocationPermission();
 
-        // set click listener to clear cached info when button clicked
         binding.btnClearCache.setOnClickListener(v -> RealTime.clearCachedInfo());
 
-        createDateTimer();
+        setupTimeDisplay();
     }
 
-    /**
-     * This function will create a count down timer to show current datetime based on realtime reliable time
-     */
     @SuppressLint("SetTextI18n")
-    private void createDateTimer() {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMMM yyyy HH:mm:ss z", Locale.ENGLISH);
+    private void setupTimeDisplay() {
+        SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
 
-        countDownTimer = new CountDownTimer(Long.MAX_VALUE, 1000) {
+        countDownTimer = new CountDownTimer(Long.MAX_VALUE, 50) {
             @Override
             public void onTick(long millisUntilFinished) {
-
                 if (RealTime.isInitialized()) {
-                    binding.txtDateTime.setText(simpleDateFormat.format(RealTime.now()));
+                    binding.txtDateTime.setText(isoFormat.format(RealTime.now()));
+                    binding.txtStatus.setText("GPS SYNCED");
                 } else {
-                    binding.txtDateTime.setText("RealTime is not initialized yet.");
+                    binding.txtDateTime.setText("--:--:--");
+                    binding.txtStatus.setText("Waiting for GPS...");
                 }
             }
 
@@ -58,11 +55,7 @@ public class MainActivity extends AppCompatActivity {
         countDownTimer.start();
     }
 
-    /**
-     * This function requests for location permission to get time from Gps provider
-     */
     private void requestLocationPermission() {
-        // request for location permissions
         ActivityCompat.requestPermissions(this, new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
@@ -72,8 +65,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        // stop counter
         if (countDownTimer != null) {
             countDownTimer.cancel();
         }
