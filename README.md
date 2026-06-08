@@ -1,24 +1,18 @@
-# RealTime
+# RealTime (GPS-only fork)
 
 [![platform](https://img.shields.io/badge/platform-Android-green.svg)](https://www.android.com)
 [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)
-[![Jitpack](https://jitpack.io/v/homayoonahmadi/RealTime.svg)](https://jitpack.io/#homayoonahmadi/RealTime)
 
-RealTime is a reliable time library for Android. Just initialize the current time using one of several time providers like GPS, NTP servers, or your own server and get current reliable time impervious to device clock changes by the user until the next device boot.
-
-# Introduction Video
-https://user-images.githubusercontent.com/29772463/216837670-d856b038-bc81-4e70-8dcb-f737c36febe0.mp4
+GPS-only fork of RealTime — a reliable time library for Android. Gets the current time from GPS satellites and maintains it across device clock changes until the next reboot. NTP and HTTP time server providers have been removed.
 
 # Features
-- RealTime provides 3 different time providers: 
-  + Location providers [Using GPS] 
-  + NTP servers [Network Time Protocol servers]
-  + Your custom-defined server [Using date header]
-- RealTime detects device reboot and will reinitialize dateTime automatically after rebooting
-- RealTime will detect network detection status changes and location provider ON/OFF changes and requests for the current time if it has not been initialized yet
+- Single time provider: **GPS satellites** via `LocationManager`
+- Caches the GPS time and projects it forward using `SystemClock.elapsedRealtime()`, immune to user clock changes
+- Compensates for GPS-to-app transport delay using `location.getElapsedRealtimeNanos()`
+- Detects device reboot and re-initializes automatically
+- Retries on location provider enabled/disabled changes
 
-
-# How to add dependency:
+# How to add dependency
 
 Step 1. Add the JitPack repository to your build.gradle file
 
@@ -34,78 +28,47 @@ Step 2. Add the dependency
 
 ```groovy
 dependencies {
-    implementation 'com.github.homayoonahmadi:RealTime:1.3.0'
+    implementation 'ir.programmerplus:realtime:1.3.0'
 }
 ```
 
 # How to use
-Add this to `onCreate` method of your `Application` class:
 
-```
+Add this to `onCreate` of your `Application` class:
+
+```java
 RealTime.builder(this)
       .withGpsProvider()
-      .withNtpServer("time.nist.gov")
-      .withNtpServer("time.google.com")
-      .withNtpServer("time.windows.com")
-      .withTimeServer("https://bing.com")
-      .withTimeServer("https://google.com")
       .setLoggingEnabled(BuildConfig.DEBUG)
       .setSyncBackoffDelay(30, TimeUnit.SECONDS)
       .build(date -> Log.d(TAG, "RealTime is initialized, current dateTime: " + date));
 ```
 
-Then everywhere you need reliable time first you need to check if RealTime is initialized or not:
+Then everywhere you need reliable time:
 
-```
+```java
 if (RealTime.isInitialized()) {
-    // Get current dateTime:
-    Date  = RealTime.now();
-
-    // You can show it in a text view
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, dd MMMM yyyy HH:mm:ss z", Locale.ENGLISH);
-    binding.txtDateTime.setText(simpleDateFormat.format(date));
+    SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
+    binding.txtDateTime.setText(isoFormat.format(RealTime.now()));
 } else {
-    binding.txtDateTime.setText("RealTime is not initialized yet.");
+    binding.txtDateTime.setText("Waiting for GPS...");
 }
 ```
 
 # Notes
-- If you want to use a custom server, ensure the server's time is correct and reliable.
-- RealTime tries to get time using a retry with delay strategy if the current network doesn't have an internet connection yet.
-- RealTime will not add location permissions to manifest automatically. If you want to use a GPS provider, add the required permissions to your manifest:
-
-```
-<manifest ... >
-  <!-- Always include this permission -->
-  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-  <!-- Include only if your app benefits from precise location access. -->
-  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-</manifest>
-```
-
-NTP servers tested:
-```
-time.nist.gov
-time-a.nist.gov
-time.google.com
-time.windows.com
-1.us.pool.ntp.org
-ir.pool.ntp.org
-```
+- Requires `ACCESS_FINE_LOCATION` or `ACCESS_COARSE_LOCATION` permission — add to your manifest and request at runtime.
+- GPS time has a **transport delay** (200–800ms from satellite fix to app callback). This fork cancels it using `location.getElapsedRealtimeNanos()` so the cached time matches wall clock within ~1ms.
+- The example app displays the time as an ISO 8601 timestamp with milliseconds, updated every 50ms.
 
 # Methods
 
-+ **RealTime class methods**
-
 | method                                        | description                                                                                                                     |
 |-----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| withNtpServer(String ntpHost)                 | This function will enable and set the URL of the NTP server.                                                                    |
-| withTimeServer(String serverHost)             | This function will enable and set the URL of the custom server.                                                                 |
-| withGpsProvider()                             | This function enables gps provider if required permissions exist in the manifest.                                               |
-| setLoggingEnabled(boolean enabled)            | Sets if logs need to be logged in.                                                                                              |
-| build()                                       | Starts to initialize RealTime using enabled providers.                                                                          |
-| build(OnRealTimeInitializedListener listener) | Starts to initialize RealTime using enabled providers and will call onInitializedListener's onInitialized(Date date) interface. |
-| isInitialized()                               | Returns true if RealTime is initialized or false otherwise.                                                                     |
-| now()                                         | Returns current reliable dateTime if the class has initialized.                                                                 |
-| clearCachedInfo()                             | This function clears all cached data so RealTime tries to initialize dateTime again.                                            |
+| withGpsProvider()                             | Enables GPS provider (requires location permission in manifest).                                                                |
+| setLoggingEnabled(boolean enabled)            | Enables or disables logcat logging.                                                                                             |
+| setSyncBackoffDelay(long delay, TimeUnit unit)| Sets the minimum interval between re-sync attempts.                                                                             |
+| build()                                       | Starts RealTime initialization using the enabled providers.                                                                     |
+| build(OnRealTimeInitializedListener listener) | Starts initialization and notifies via `onInitialized(Date)` callback.                                                          |
+| isInitialized()                               | Returns `true` if a reliable time has been cached.                                                                              |
+| now()                                         | Returns the current reliable `Date`, projected forward from the last GPS fix.                                                   |
+| clearCachedInfo()                             | Clears cached time so RealTime re-initializes on next access.                                                                   |
