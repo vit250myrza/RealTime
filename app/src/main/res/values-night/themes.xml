@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.RealTime" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/md_theme_primary</item>
-        <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
-        <item name="colorSurface">#FF1C1B1F</item>
-        <item name="colorOnSurface">#FFE6E1E5</item>
-        <item name="colorSurfaceVariant">#FF49454F</item>
-        <item name="colorOnSurfaceVariant">#FFCAC4D0</item>
-        <item name="android:colorBackground">#FF1C1B1F</item>
-        <item name="colorOutline">#FF938F99</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">?attr/clockBackgroundColor</item>
@@ -18,5 +10,6 @@
         <item name="clockAccentColor">?attr/colorPrimary</item>
         <item name="clockBackgroundColor">#FF1C1B1F</item>
         <item name="clockCardBackgroundColor">#FF4A4458</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.RealTime.AlertDialog</item>
     </style>
 </resources>
