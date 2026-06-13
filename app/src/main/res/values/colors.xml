@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="darkBackground">#FF1A1A2E</color>
-    <color name="statusText">#FF666666</color>
+    <!-- Material You accent palette -->
+    <color name="md_theme_primary">#FF6750A4</color>
+    <color name="md_theme_onPrimary">#FFFFFFFF</color>
+    <color name="md_theme_surface">#FFFFFBFE</color>
+    <color name="md_theme_onSurface">#FF1C1B1F</color>
+    <color name="md_theme_surfaceVariant">#FFE7E0EC</color>
+    <color name="md_theme_onSurfaceVariant">#FF49454F</color>
+    <color name="md_theme_background">#FFFFFBFE</color>
+    <color name="md_theme_outline">#FF79747E</color>
+
+    <!-- Custom clock colors (MD3-aligned) -->
+    <color name="clock_text">#FF1C1B1F</color>
+    <color name="clock_date">#FF49454F</color>
+    <color name="clock_card">#FFE7E0EC</color>
+    <color name="clock_background">#FFF7F2FA</color>
+
+    <!-- Accent color presets for picker -->
+    <color name="accent_purple">#FF6750A4</color>
+    <color name="accent_blue">#FF1976D2</color>
+    <color name="accent_green">#FF388E3C</color>
+    <color name="accent_red">#FFD32F2F</color>
+    <color name="accent_orange">#FFF57C00</color>
+    <color name="accent_teal">#FF00796B</color>
+    <color name="accent_pink">#FFC2185B</color>
+    <color name="accent_indigo">#FF303F9F</color>
 </resources>

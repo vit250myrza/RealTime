@@ -19,7 +19,7 @@ public class Application extends MultiDexApplication {
         RealTime.builder(this)
                 .withGpsProvider()
                 .setLoggingEnabled(BuildConfig.DEBUG)
-                .setSyncBackoffDelay(30, TimeUnit.SECONDS)
+                .setSyncBackoffDelay(5, TimeUnit.MINUTES)
                 .build(date -> Log.d(TAG, "RealTime is initialized, current dateTime: " + date));
     }
 }

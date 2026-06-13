@@ -9,6 +9,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 
 import java.util.Date;
@@ -37,9 +39,11 @@ import ir.programmerplus.realtime.utils.RealTimeUtils;
 public class RealTime implements LifecycleEventObserver {
 
     private static final String TAG = RealTime.class.getSimpleName();
+    private static final long RESYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
     private long backoffDelay;
     private boolean gpsProviderEnabled = false;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     private final Context context;
     private final LocationManager locationManager;
@@ -47,7 +51,10 @@ public class RealTime implements LifecycleEventObserver {
 
     private static final ObservableBoolean INITIALIZED = new ObservableBoolean();
 
+    private static long lastGpsRoundTripTimeMs = -1;
+
     private static RealTime instance;
+    private Runnable resyncRunnable;
 
 
     /**
@@ -207,7 +214,8 @@ public class RealTime implements LifecycleEventObserver {
     }
 
     private boolean cachedTimeIsValid(long backoffDelay) {
-        if (backoffDelay <= 0) return true;
+        if (backoffDelay < 0) return true;
+        if (backoffDelay == 0) return false;
 
         long cachedTime = CacheUtils.getCachedTime();
         long timeNow = now().getTime();
@@ -243,6 +251,26 @@ public class RealTime implements LifecycleEventObserver {
         return new Date(now);
     }
 
+    public static long getCachedTimeAgeMillis() {
+        long cachedTime = CacheUtils.getCachedTime();
+        if (cachedTime == 0) {
+            return -1;
+        }
+        return Math.max(0, System.currentTimeMillis() - cachedTime);
+    }
+
+    public static long getCachedTimeAgeSinceBootMillis() {
+        long cachedDeviceUptime = CacheUtils.getCachedDeviceUptime();
+        if (cachedDeviceUptime == 0) {
+            return -1;
+        }
+        return Math.max(0, SystemClock.elapsedRealtime() - cachedDeviceUptime);
+    }
+
+    public static long getLastGpsRoundTripTimeMs() {
+        return lastGpsRoundTripTimeMs;
+    }
+
     /**
      * In this function we request location updates if we have location permission and gps provider
      * is enabled by user.
@@ -259,9 +287,31 @@ public class RealTime implements LifecycleEventObserver {
 
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, 0, locationListener);
             LogUtils.d(TAG, "Requesting time from location provider...");
+            
+            // Schedule the next resync in 5 minutes
+            scheduleNextResync();
         } else {
             LogUtils.w(TAG, "Location permission was not granted.");
         }
+    }
+    
+    /**
+     * Schedule the next GPS resync for 5 minutes from now
+     */
+    private void scheduleNextResync() {
+        // Cancel any previously scheduled resync
+        if (resyncRunnable != null) {
+            handler.removeCallbacks(resyncRunnable);
+        }
+        
+        // Create and schedule the resync runnable
+        resyncRunnable = () -> {
+            LogUtils.d(TAG, "Triggering periodic resync after 5 minutes.");
+            requestLocationUpdates();
+        };
+        
+        handler.postDelayed(resyncRunnable, RESYNC_INTERVAL_MS);
+        LogUtils.d(TAG, "Scheduled next resync in 5 minutes.");
     }
 
     /**
@@ -312,13 +362,9 @@ public class RealTime implements LifecycleEventObserver {
         CacheUtils.setCachedBootTime(bootTime);
         CacheUtils.setCachedDeviceUptime(deviceUptime);
 
-        // Unsubscribe from location providers
-        if (locationManager != null) {
-            locationManager.removeUpdates(locationListener);
-            LogUtils.d(TAG, "Location updates stopped.");
+        if (!INITIALIZED.get()) {
+            INITIALIZED.set(true);
         }
-
-        INITIALIZED.set(true);
 
         // populate results
         if (initializedListener != null)
@@ -336,18 +382,24 @@ public class RealTime implements LifecycleEventObserver {
 
             // Project GPS fix time forward using elapsedRealtime to cancel transport delay
             long adjustedTime = gpsTime;
+            long rttMs = -1;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 long fixElapsedMs = location.getElapsedRealtimeNanos() / 1000000;
                 long delayMs = SystemClock.elapsedRealtime() - fixElapsedMs;
                 if (delayMs > 0 && delayMs < 10000) {
+                    rttMs = delayMs * 2;
                     adjustedTime = gpsTime + delayMs;
                 }
             }
+            lastGpsRoundTripTimeMs = rttMs;
             setTime(adjustedTime);
 
             if (locationManager != null) {
                 locationManager.removeUpdates(this);
             }
+            
+            // Schedule next resync
+            scheduleNextResync();
         }
 
         @Override
