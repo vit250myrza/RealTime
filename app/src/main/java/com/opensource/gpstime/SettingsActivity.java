@@ -12,6 +12,7 @@ import android.widget.EditText;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.Locale;
@@ -60,6 +61,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        DynamicColors.applyToActivityIfAvailable(this);
         settings = new Settings(this);
         Settings.applyTheme(settings.getTheme());
         super.onCreate(savedInstanceState);
@@ -107,7 +109,6 @@ public class SettingsActivity extends AppCompatActivity {
         binding.chipThemeDark.setChecked(theme == Settings.THEME_DARK);
 
         binding.btnAccentColor.setText(getAccentLabel(settings.getAccentColorRaw()));
-        binding.btnTimeColor.setText(getAccentLabel(settings.getTimeColorRaw()));
         binding.btnFont.setText(getFontLabel(settings.getFont()));
 
         applySwitchColors();
@@ -127,7 +128,6 @@ public class SettingsActivity extends AppCompatActivity {
         binding.btnTimeFormat.setTextColor(accentColor);
         binding.btnDateFormat.setTextColor(accentColor);
         binding.btnAccentColor.setTextColor(accentColor);
-        binding.btnTimeColor.setTextColor(accentColor);
         binding.btnFont.setTextColor(accentColor);
 
         ColorStateList chipBg = createChipBackgroundColorStateList(accentColor);
@@ -288,45 +288,39 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        binding.btnAccentColor.setOnClickListener(v -> showColorDialog(false));
-        binding.btnTimeColor.setOnClickListener(v -> showColorDialog(true));
+        binding.btnAccentColor.setOnClickListener(v -> showColorDialog());
         binding.btnFont.setOnClickListener(v -> showFontPickerDialog());
     }
 
-    private void showColorDialog(boolean isTimeColor) {
-        int current = isTimeColor ? settings.getTimeColorRaw() : settings.getAccentColorRaw();
+    private void showColorDialog() {
+        int current = settings.getAccentColorRaw();
         int checked = 0;
         for (int i = 0; i < COLOR_VALUES.length; i++) {
             if (current == COLOR_VALUES[i]) { checked = i; break; }
         }
 
         new MaterialAlertDialogBuilder(this)
-                .setTitle(isTimeColor ? R.string.time_color : R.string.app_color)
+                .setTitle(R.string.app_color)
                 .setSingleChoiceItems(COLOR_NAMES, checked, (dialog, which) -> {
                     if (which == COLOR_NAMES.length - 1) {
                         dialog.dismiss();
-                        showCustomHexDialog(isTimeColor);
+                        showCustomHexDialog();
                     } else {
                         if (COLOR_VALUES[which] == -1) {
-                            if (isTimeColor) settings.resetTimeColor();
-                            else settings.resetAccentColor();
+                            settings.resetAccentColor();
                         } else {
-                            if (isTimeColor) settings.setTimeColor(COLOR_VALUES[which]);
-                            else settings.setAccentColor(COLOR_VALUES[which]);
+                            settings.setAccentColor(COLOR_VALUES[which]);
                         }
-                        if (isTimeColor) binding.btnTimeColor.setText(COLOR_NAMES[which]);
-                        else binding.btnAccentColor.setText(COLOR_NAMES[which]);
-                        if (!isTimeColor) {
-                            applySwitchColors();
-                            applyAccentColors();
-                        }
+                        binding.btnAccentColor.setText(COLOR_NAMES[which]);
+                        applySwitchColors();
+                        applyAccentColors();
                         dialog.dismiss();
                     }
                 })
                 .show();
     }
 
-    private void showCustomHexDialog(boolean isTimeColor) {
+    private void showCustomHexDialog() {
         EditText input = new EditText(this);
         input.setText("#FF");
         input.setSelection(input.getText().length());
@@ -335,25 +329,19 @@ public class SettingsActivity extends AppCompatActivity {
         input.setPadding(pad, pad / 3, pad, pad / 3);
 
         new MaterialAlertDialogBuilder(this)
-                .setTitle(isTimeColor ? "Custom time color" : "Custom app color")
+                .setTitle("Custom app color")
                 .setView(input)
                 .setPositiveButton("Apply", (d, w) -> {
                     String hex = input.getText().toString().trim();
                     try {
                         if (!hex.startsWith("#")) hex = "#" + hex;
                         int color = Color.parseColor(hex);
-                        if (isTimeColor) {
-                            settings.setTimeColor(color);
-                            binding.btnTimeColor.setText(String.format("#%08X", color));
-                        } else {
-                            settings.setAccentColor(color);
-                            binding.btnAccentColor.setText(String.format("#%08X", color));
-                            applySwitchColors();
-                            applyAccentColors();
-                        }
+                        settings.setAccentColor(color);
+                        binding.btnAccentColor.setText(String.format("#%08X", color));
+                        applySwitchColors();
+                        applyAccentColors();
                     } catch (IllegalArgumentException e) {
-                        if (isTimeColor) binding.btnTimeColor.setText(R.string.time_color);
-                        else binding.btnAccentColor.setText(R.string.accent_color);
+                        binding.btnAccentColor.setText(R.string.accent_color);
                     }
                 })
                 .setNegativeButton("Cancel", null)

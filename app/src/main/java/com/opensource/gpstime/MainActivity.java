@@ -22,6 +22,7 @@ import java.util.TimeZone;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import com.google.android.material.color.DynamicColors;
 import com.opensource.gpstime.realtime.RealTime;
 import com.opensource.gpstime.databinding.ActivityMainBinding;
 import android.util.Log;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        DynamicColors.applyToActivityIfAvailable(this);
         settings = new Settings(this);
         Settings.applyTheme(settings.getTheme());
         super.onCreate(savedInstanceState);
@@ -262,11 +264,10 @@ public class MainActivity extends AppCompatActivity {
 
         updateSyncInfo();
 
-        int timeColor = settings.getTimeColor(MainActivity.this);
         int appColor = settings.getAccentColor(MainActivity.this);
         switch (mode) {
             case Settings.CLOCK_MODE_DIGITAL:
-                binding.txtTime.setTextColor(timeColor);
+                binding.txtTime.setTextColor(appColor);
                 binding.txtStatus.setTextColor(appColor);
                 binding.txtDate.setTextColor(appColor);
                 break;
@@ -278,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
             case Settings.CLOCK_MODE_BOTH:
                 binding.analogClockBoth.setAccentColor(appColor);
                 binding.analogClockBoth.setRimColor(appColor);
-                binding.txtBothTime.setTextColor(timeColor);
+                binding.txtBothTime.setTextColor(appColor);
                 binding.txtBothStatus.setTextColor(appColor);
                 binding.txtBothDate.setTextColor(appColor);
                 break;
@@ -309,11 +310,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyUiColors() {
         int accentColor = settings.getAccentColor(this);
-        int timeColor = settings.getTimeColor(this);
         int contrast = getContrastingTextColor(accentColor);
 
         binding.getRoot().setBackgroundColor(adjustAlpha(accentColor, 0.05f));
-        binding.txtSyncInfo.setTextColor(timeColor);
+        binding.txtSyncInfo.setTextColor(accentColor);
 
         binding.cardTime.setCardBackgroundColor(adjustAlpha(accentColor, 0.08f));
         binding.cardBoth.setCardBackgroundColor(adjustAlpha(accentColor, 0.08f));
@@ -322,8 +322,8 @@ public class MainActivity extends AppCompatActivity {
         binding.btnClearCache.setBackgroundTintList(ColorStateList.valueOf(adjustAlpha(accentColor, 0.20f)));
         binding.btnClearCache.setTextColor(contrast);
 
-        binding.analogClock.setFaceColor(adjustAlpha(timeColor, 0.12f));
-        binding.analogClockBoth.setFaceColor(adjustAlpha(timeColor, 0.12f));
+        binding.analogClock.setFaceColor(adjustAlpha(accentColor, 0.12f));
+        binding.analogClockBoth.setFaceColor(adjustAlpha(accentColor, 0.12f));
         binding.analogClock.setAccentColor(accentColor);
         binding.analogClockBoth.setAccentColor(accentColor);
     }

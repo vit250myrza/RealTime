@@ -21,7 +21,6 @@
     <string name="theme_dark">Dark</string>
     <string name="accent_color">Accent color</string>
     <string name="app_color">App color</string>
-    <string name="time_color">Time color</string>
     <string name="font">Font</string>
     <string name="font_default">Default</string>
     <string name="font_monospace">Monospace</string>

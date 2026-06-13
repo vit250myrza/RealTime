@@ -20,7 +20,6 @@ public class Settings {
     private static final String KEY_DATE_FORMAT = "date_format";
     private static final String KEY_THEME = "theme";
     private static final String KEY_ACCENT_COLOR = "accent_color";
-    private static final String KEY_TIME_COLOR = "time_color";
     private static final String KEY_FONT = "font";
     private static final String KEY_SHOW_UTC = "show_utc";
     private static final String KEY_SHOW_SYNC_INFO = "show_sync_info";
@@ -274,26 +273,6 @@ public class Settings {
 
     public void resetAccentColor() {
         prefs.edit().remove(KEY_ACCENT_COLOR).apply();
-    }
-
-    public int getTimeColor(Context context) {
-        int stored = prefs.getInt(KEY_TIME_COLOR, -1);
-        if (stored == -1) {
-            return MaterialColors.getColor(context, com.google.android.material.R.attr.colorPrimary, 0xFF6750A4);
-        }
-        return stored;
-    }
-
-    public int getTimeColorRaw() {
-        return prefs.getInt(KEY_TIME_COLOR, -1);
-    }
-
-    public void setTimeColor(int color) {
-        prefs.edit().putInt(KEY_TIME_COLOR, color).apply();
-    }
-
-    public void resetTimeColor() {
-        prefs.edit().remove(KEY_TIME_COLOR).apply();
     }
 
     public String getFont() {

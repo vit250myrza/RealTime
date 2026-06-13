@@ -15,7 +15,7 @@
 
         <item name="clockTextColor">@color/clock_text</item>
         <item name="clockDateColor">@color/clock_date</item>
-        <item name="clockAccentColor">@color/md_theme_primary</item>
+        <item name="clockAccentColor">?attr/colorPrimary</item>
         <item name="clockBackgroundColor">@color/clock_background</item>
         <item name="clockCardBackgroundColor">@color/clock_card</item>
     </style>
