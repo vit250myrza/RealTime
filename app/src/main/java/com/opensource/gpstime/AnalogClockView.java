@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime_example;
+package com.opensource.gpstime;
 
 import android.content.Context;
 import android.content.res.TypedArray;

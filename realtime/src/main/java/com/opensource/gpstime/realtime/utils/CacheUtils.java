@@ -1,9 +1,9 @@
-package ir.programmerplus.realtime.utils;
+package com.opensource.gpstime.realtime.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import ir.programmerplus.realtime.BuildConfig;
+import com.opensource.gpstime.realtime.BuildConfig;
 
 public abstract class CacheUtils {
 

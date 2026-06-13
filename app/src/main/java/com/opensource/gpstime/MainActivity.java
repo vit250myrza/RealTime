@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime_example;
+package com.opensource.gpstime;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -22,8 +22,8 @@ import java.util.TimeZone;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import ir.programmerplus.realtime.RealTime;
-import ir.programmerplus.realtime_example.databinding.ActivityMainBinding;
+import com.opensource.gpstime.realtime.RealTime;
+import com.opensource.gpstime.databinding.ActivityMainBinding;
 import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {

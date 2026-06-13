@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'ir.programmerplus.realtime_example'
+    namespace 'com.opensource.gpstime'
     compileSdk 34
 
     defaultConfig {
-        applicationId "ir.programmerplus.realtime_example"
+        applicationId "com.opensource.gpstime"
         minSdk 21
         targetSdk 34
         versionCode 9

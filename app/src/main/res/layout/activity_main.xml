@@ -120,7 +120,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/txt_sync_info">
 
-        <ir.programmerplus.realtime_example.AnalogClockView
+        <com.opensource.gpstime.AnalogClockView
             android:id="@+id/analog_clock"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -183,7 +183,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <ir.programmerplus.realtime_example.AnalogClockView
+                <com.opensource.gpstime.AnalogClockView
                     android:id="@+id/analog_clock_both"
                     android:layout_width="0dp"
                     android:layout_height="0dp"

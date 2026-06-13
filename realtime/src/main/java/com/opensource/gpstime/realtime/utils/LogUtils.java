@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime.utils;
+package com.opensource.gpstime.realtime.utils;
 
 import android.util.Log;
 

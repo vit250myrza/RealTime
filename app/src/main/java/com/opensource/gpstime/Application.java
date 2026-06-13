@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime_example;
+package com.opensource.gpstime;
 
 
 import android.util.Log;
@@ -6,7 +6,7 @@ import android.util.Log;
 import java.util.concurrent.TimeUnit;
 
 import androidx.multidex.MultiDexApplication;
-import ir.programmerplus.realtime.RealTime;
+import com.opensource.gpstime.realtime.RealTime;
 
 public class Application extends MultiDexApplication {
 

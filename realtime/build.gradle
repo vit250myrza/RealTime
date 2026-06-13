@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace 'ir.programmerplus.realtime'
+    namespace 'com.opensource.gpstime.realtime'
     compileSdk 34
 
     defaultConfig {
@@ -49,7 +49,7 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
 
-                groupId = 'ir.programmerplus.realtime'
+                groupId = 'com.opensource.gpstime.realtime'
                 artifactId = 'realtime'
                 version = '1.3.0'
 

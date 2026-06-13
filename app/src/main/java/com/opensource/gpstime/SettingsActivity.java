@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime_example;
+package com.opensource.gpstime;
 
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -16,8 +16,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.Locale;
 
-import ir.programmerplus.realtime.RealTime;
-import ir.programmerplus.realtime_example.databinding.ActivitySettingsBinding;
+import com.opensource.gpstime.realtime.RealTime;
+import com.opensource.gpstime.databinding.ActivitySettingsBinding;
 
 public class SettingsActivity extends AppCompatActivity {
 

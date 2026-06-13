@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime;
+package com.opensource.gpstime.realtime;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -22,11 +22,11 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ProcessLifecycleOwner;
-import ir.programmerplus.realtime.interfaces.EnhancedLocationListener;
-import ir.programmerplus.realtime.interfaces.OnRealTimeInitializedListener;
-import ir.programmerplus.realtime.utils.CacheUtils;
-import ir.programmerplus.realtime.utils.LogUtils;
-import ir.programmerplus.realtime.utils.RealTimeUtils;
+import com.opensource.gpstime.realtime.interfaces.EnhancedLocationListener;
+import com.opensource.gpstime.realtime.interfaces.OnRealTimeInitializedListener;
+import com.opensource.gpstime.realtime.utils.CacheUtils;
+import com.opensource.gpstime.realtime.utils.LogUtils;
+import com.opensource.gpstime.realtime.utils.RealTimeUtils;
 
 /**
  * Using RealTime class, you only need to initialize current reliable time once using GPS provider

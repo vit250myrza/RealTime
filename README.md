@@ -30,7 +30,7 @@ Step 2. Add the dependency
 
 ```groovy
 dependencies {
-    implementation 'ir.programmerplus:realtime:1.3.0'
+    implementation 'com.opensource.gpstime:realtime:1.3.0'
 }
 ```
 

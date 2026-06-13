@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime.interfaces;
+package com.opensource.gpstime.realtime.interfaces;
 
 import java.util.Date;
 

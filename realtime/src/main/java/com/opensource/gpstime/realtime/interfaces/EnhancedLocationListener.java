@@ -1,4 +1,4 @@
-package ir.programmerplus.realtime.interfaces;
+package com.opensource.gpstime.realtime.interfaces;
 
 import android.location.Location;
 import android.location.LocationListener;
