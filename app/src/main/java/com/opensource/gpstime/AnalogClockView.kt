@@ -69,6 +69,11 @@ class AnalogClockView @JvmOverloads constructor(
         invalidate()
     }
 
+    fun setTickColor(color: Int) {
+        tickColor = color
+        invalidate()
+    }
+
     fun setTime(date: Date) {
         val cal = Calendar.getInstance()
         cal.time = date
@@ -150,8 +155,7 @@ class AnalogClockView @JvmOverloads constructor(
 
         centerPaint.color = accentColor
         canvas.drawCircle(cx, cy, radius * 0.06f, centerPaint)
-        centerPaint.color = accentColor
-        centerPaint.alpha = 180
+        centerPaint.color = faceColor
         canvas.drawCircle(cx, cy, radius * 0.025f, centerPaint)
     }
 

@@ -10,7 +10,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.ColorUtils
+import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.opensource.gpstime.databinding.ActivitySettingsBinding
 import com.opensource.gpstime.realtime.RealTime
@@ -25,6 +28,8 @@ class SettingsActivity : AppCompatActivity() {
     private var syncUpdateActive = false
     private var defaultChipTextColors: Array<ColorStateList?>? = null
     private var defaultChipBackgroundColors: Array<ColorStateList?>? = null
+    private var defaultSwitchThumbTint: ColorStateList? = null
+    private var defaultSwitchTrackTint: ColorStateList? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         DynamicColors.applyToActivityIfAvailable(this)
@@ -75,46 +80,53 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnAccentColor.text = getAccentLabel(settings.accentColorRaw)
         binding.btnFont.text = getFontLabel(settings.font)
 
-        saveDefaultChipColors()
+        saveDefaults()
         applySwitchColors()
         applyAccentColors()
     }
 
     private fun applyAccentColors() {
         val accentColor = settings.getAccentColor(this)
-        val contrast = getContrastingTextColor(accentColor)
+        val contrast = UiColorUtils.getContrastingTextColor(accentColor)
 
         binding.toolbar.backgroundTintList = ColorStateList.valueOf(accentColor)
         binding.toolbar.setTitleTextColor(contrast)
         binding.toolbar.navigationIcon?.setTint(contrast)
 
-        binding.btnTimeFormat.setTextColor(accentColor)
-        binding.btnDateFormat.setTextColor(accentColor)
-        binding.btnAccentColor.setTextColor(accentColor)
-        binding.btnFont.setTextColor(accentColor)
+        window.statusBarColor = accentColor
+        val insetsController = WindowInsetsControllerCompat(window, window.decorView)
+        insetsController.isAppearanceLightStatusBars = (contrast == Color.BLACK)
+
+        val surfaceColor = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface, Color.WHITE)
+        val btnTextColor = UiColorUtils.ensureContrast(accentColor, surfaceColor, minContrast = 4.5)
+
+        binding.btnTimeFormat.setTextColor(btnTextColor)
+        binding.btnDateFormat.setTextColor(btnTextColor)
+        binding.btnAccentColor.setTextColor(btnTextColor)
+        binding.btnFont.setTextColor(btnTextColor)
 
         if (settings.accentColorRaw == -1) {
             resetChipColorsToTheme()
         } else {
-            val chipBg = createChipBackgroundColorStateList(accentColor)
-            val chipText = createChipTextColorStateList(accentColor, contrast)
+            val chipBg = createChipBackgroundColorStateList(accentColor, surfaceColor)
+            val chipText = createChipTextColorStateList(accentColor, contrast, surfaceColor)
 
-            binding.chipDigital.chipBackgroundColor = chipBg
-            binding.chipDigital.setTextColor(chipText)
-            binding.chipAnalog.chipBackgroundColor = chipBg
-            binding.chipAnalog.setTextColor(chipText)
-            binding.chipBoth.chipBackgroundColor = chipBg
-            binding.chipBoth.setTextColor(chipText)
-            binding.chipThemeSystem.chipBackgroundColor = chipBg
-            binding.chipThemeSystem.setTextColor(chipText)
-            binding.chipThemeLight.chipBackgroundColor = chipBg
-            binding.chipThemeLight.setTextColor(chipText)
-            binding.chipThemeDark.chipBackgroundColor = chipBg
-            binding.chipThemeDark.setTextColor(chipText)
+            val chips = arrayOf(
+                binding.chipDigital,
+                binding.chipAnalog,
+                binding.chipBoth,
+                binding.chipThemeSystem,
+                binding.chipThemeLight,
+                binding.chipThemeDark
+            )
+            for (chip in chips) {
+                chip.chipBackgroundColor = chipBg
+                chip.setTextColor(chipText)
+            }
         }
     }
 
-    private fun saveDefaultChipColors() {
+    private fun saveDefaults() {
         defaultChipTextColors = arrayOf(
             binding.chipDigital.textColors,
             binding.chipAnalog.textColors,
@@ -131,24 +143,27 @@ class SettingsActivity : AppCompatActivity() {
             binding.chipThemeLight.chipBackgroundColor,
             binding.chipThemeDark.chipBackgroundColor,
         )
+        defaultSwitchThumbTint = binding.swShowDate.thumbTintList
+        defaultSwitchTrackTint = binding.swShowDate.trackTintList
     }
 
     private fun resetChipColorsToTheme() {
-        binding.chipDigital.chipBackgroundColor = defaultChipBackgroundColors?.get(0)
-        binding.chipDigital.setTextColor(defaultChipTextColors?.get(0))
-        binding.chipAnalog.chipBackgroundColor = defaultChipBackgroundColors?.get(1)
-        binding.chipAnalog.setTextColor(defaultChipTextColors?.get(1))
-        binding.chipBoth.chipBackgroundColor = defaultChipBackgroundColors?.get(2)
-        binding.chipBoth.setTextColor(defaultChipTextColors?.get(2))
-        binding.chipThemeSystem.chipBackgroundColor = defaultChipBackgroundColors?.get(3)
-        binding.chipThemeSystem.setTextColor(defaultChipTextColors?.get(3))
-        binding.chipThemeLight.chipBackgroundColor = defaultChipBackgroundColors?.get(4)
-        binding.chipThemeLight.setTextColor(defaultChipTextColors?.get(4))
-        binding.chipThemeDark.chipBackgroundColor = defaultChipBackgroundColors?.get(5)
-        binding.chipThemeDark.setTextColor(defaultChipTextColors?.get(5))
+        val chips = arrayOf(
+            binding.chipDigital,
+            binding.chipAnalog,
+            binding.chipBoth,
+            binding.chipThemeSystem,
+            binding.chipThemeLight,
+            binding.chipThemeDark
+        )
+        for (i in chips.indices) {
+            chips[i].chipBackgroundColor = defaultChipBackgroundColors?.get(i)
+            chips[i].setTextColor(defaultChipTextColors?.get(i))
+        }
     }
 
-    private fun createChipBackgroundColorStateList(accentColor: Int): ColorStateList {
+    private fun createChipBackgroundColorStateList(accentColor: Int, surfaceColor: Int): ColorStateList {
+        val uncheckedBg = ColorUtils.compositeColors(UiColorUtils.adjustAlpha(accentColor, 0.12f), surfaceColor)
         return ColorStateList(
             arrayOf(
                 intArrayOf(android.R.attr.state_checked),
@@ -156,12 +171,14 @@ class SettingsActivity : AppCompatActivity() {
             ),
             intArrayOf(
                 accentColor,
-                adjustAlpha(accentColor, 0.08f)
+                uncheckedBg
             )
         )
     }
 
-    private fun createChipTextColorStateList(accentColor: Int, contrast: Int): ColorStateList {
+    private fun createChipTextColorStateList(accentColor: Int, contrast: Int, surfaceColor: Int): ColorStateList {
+        val uncheckedBg = ColorUtils.compositeColors(UiColorUtils.adjustAlpha(accentColor, 0.12f), surfaceColor)
+        val uncheckedTextColor = UiColorUtils.ensureContrast(accentColor, uncheckedBg, minContrast = 4.5)
         return ColorStateList(
             arrayOf(
                 intArrayOf(android.R.attr.state_checked),
@@ -169,47 +186,47 @@ class SettingsActivity : AppCompatActivity() {
             ),
             intArrayOf(
                 contrast,
-                accentColor
+                uncheckedTextColor
             )
         )
     }
 
-    private fun getContrastingTextColor(color: Int): Int {
-        val luminance = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255.0
-        return if (luminance > 0.5) Color.BLACK else Color.WHITE
-    }
-
-    private fun adjustAlpha(color: Int, alpha: Float): Int {
-        val alphaInt = Math.round(Color.alpha(color) * alpha)
-        return (color and 0x00FFFFFF) or (alphaInt shl 24)
-    }
-
     private fun applySwitchColors() {
+        val switches = arrayOf(
+            binding.swShowDate,
+            binding.swShowSeconds,
+            binding.swShowMillis,
+            binding.sw24h,
+            binding.swUtc,
+            binding.swShowSyncInfo
+        )
+
         if (settings.accentColorRaw == -1) {
-            binding.swShowDate.thumbTintList = null
-            binding.swShowDate.trackTintList = null
-            binding.swShowSeconds.thumbTintList = null
-            binding.swShowSeconds.trackTintList = null
-            binding.swShowMillis.thumbTintList = null
-            binding.swShowMillis.trackTintList = null
-            binding.sw24h.thumbTintList = null
-            binding.sw24h.trackTintList = null
-            binding.swUtc.thumbTintList = null
-            binding.swUtc.trackTintList = null
-            binding.swShowSyncInfo.thumbTintList = null
-            binding.swShowSyncInfo.trackTintList = null
+            for (sw in switches) {
+                sw.thumbTintList = defaultSwitchThumbTint
+                sw.trackTintList = defaultSwitchTrackTint
+            }
             return
         }
+
         val accentColor = settings.getAccentColor(this)
-        val accentColorTransparent = (accentColor and 0x00FFFFFF) or 0x33000000
+        val surfaceColor = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface, Color.WHITE)
+        val isDark = ColorUtils.calculateLuminance(surfaceColor) < 0.5
+
+        val checkedThumbColor = UiColorUtils.ensureContrast(accentColor, surfaceColor, minContrast = 3.0)
+        val uncheckedThumbColor = if (isDark) 0xFF938F99.toInt() else 0xFF79747E.toInt()
+
+        val checkedTrackColor = UiColorUtils.adjustAlpha(checkedThumbColor, 0.40f)
+        val uncheckedTrackColor = if (isDark) 0x33FFFFFF else 0x26000000
+
         val thumbTint = ColorStateList(
             arrayOf(
                 intArrayOf(android.R.attr.state_checked),
                 intArrayOf(-android.R.attr.state_checked)
             ),
             intArrayOf(
-                accentColor,
-                0xFFE0E0E0.toInt()
+                checkedThumbColor,
+                uncheckedThumbColor
             )
         )
         val trackTint = ColorStateList(
@@ -218,22 +235,15 @@ class SettingsActivity : AppCompatActivity() {
                 intArrayOf(-android.R.attr.state_checked)
             ),
             intArrayOf(
-                accentColorTransparent,
-                0x33000000
+                checkedTrackColor,
+                uncheckedTrackColor
             )
         )
-        binding.swShowDate.thumbTintList = thumbTint
-        binding.swShowDate.trackTintList = trackTint
-        binding.swShowSeconds.thumbTintList = thumbTint
-        binding.swShowSeconds.trackTintList = trackTint
-        binding.swShowMillis.thumbTintList = thumbTint
-        binding.swShowMillis.trackTintList = trackTint
-        binding.sw24h.thumbTintList = thumbTint
-        binding.sw24h.trackTintList = trackTint
-        binding.swUtc.thumbTintList = thumbTint
-        binding.swUtc.trackTintList = trackTint
-        binding.swShowSyncInfo.thumbTintList = thumbTint
-        binding.swShowSyncInfo.trackTintList = trackTint
+
+        for (sw in switches) {
+            sw.thumbTintList = thumbTint
+            sw.trackTintList = trackTint
+        }
     }
 
     private fun setupListeners() {
@@ -286,6 +296,7 @@ class SettingsActivity : AppCompatActivity() {
             if (isChecked && !initializing) {
                 TransitionManager.beginDelayedTransition(themeRoot)
                 settings.theme = Settings.THEME_SYSTEM
+                Settings.applyTheme(Settings.THEME_SYSTEM)
                 recreate()
             }
         }
@@ -293,6 +304,7 @@ class SettingsActivity : AppCompatActivity() {
             if (isChecked && !initializing) {
                 TransitionManager.beginDelayedTransition(themeRoot)
                 settings.theme = Settings.THEME_LIGHT
+                Settings.applyTheme(Settings.THEME_LIGHT)
                 recreate()
             }
         }
@@ -300,6 +312,7 @@ class SettingsActivity : AppCompatActivity() {
             if (isChecked && !initializing) {
                 TransitionManager.beginDelayedTransition(themeRoot)
                 settings.theme = Settings.THEME_DARK
+                Settings.applyTheme(Settings.THEME_DARK)
                 recreate()
             }
         }
@@ -344,11 +357,12 @@ class SettingsActivity : AppCompatActivity() {
         input.setText("#FF")
         input.setSelection(input.text.length)
         input.hint = "#AARRGGBB or #RRGGBB"
-        val pad = (24 * resources.displayMetrics.density).toInt()
-        input.setPadding(pad, pad / 3, pad, pad / 3)
+        val padHorizontal = (24 * resources.displayMetrics.density).toInt()
+        val padVertical = (16 * resources.displayMetrics.density).toInt()
+        input.setPadding(padHorizontal, padVertical, padHorizontal, padVertical)
 
         MaterialAlertDialogBuilder(this)
-            .setTitle("Custom app color")
+            .setTitle(R.string.app_color)
             .setView(input)
             .setPositiveButton("Apply") { _, _ ->
                 var hex = input.text.toString().trim()
@@ -360,7 +374,7 @@ class SettingsActivity : AppCompatActivity() {
                     applySwitchColors()
                     applyAccentColors()
                 } catch (e: IllegalArgumentException) {
-                    binding.btnAccentColor.setText(R.string.accent_color)
+                    binding.btnAccentColor.text = getAccentLabel(settings.accentColorRaw)
                 }
             }
             .setNegativeButton("Cancel", null)

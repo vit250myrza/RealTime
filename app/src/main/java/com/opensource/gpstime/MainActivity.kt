@@ -15,12 +15,16 @@ import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.graphics.ColorUtils
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.MaterialColors
 import com.opensource.gpstime.databinding.ActivityMainBinding
 import com.opensource.gpstime.realtime.RealTime
 import android.util.Log
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -37,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         Settings.applyTheme(settings.theme)
         super.onCreate(savedInstanceState)
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        enableFullscreenMode()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -57,6 +61,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        applyClockMode()
         applyFont()
         applyUiColors()
         startClockUpdates()
@@ -70,12 +75,29 @@ class MainActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            window.decorView.systemUiVisibility = (
-                    View.SYSTEM_UI_FLAG_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            )
+            hideSystemBars()
         }
+    }
+
+    private fun enableFullscreenMode() {
+        @Suppress("DEPRECATION")
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        hideSystemBars()
+    }
+
+    private fun hideSystemBars() {
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        insetsController.hide(WindowInsetsCompat.Type.statusBars())
+
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        )
     }
 
     private fun isIsoPortrait(): Boolean {
@@ -90,16 +112,16 @@ class MainActivity : AppCompatActivity() {
         if (updatesActive) return
         updatesActive = true
 
-        val timePat: String
-        if (settings.timeFormat == 0) {
-            timePat = if (isIsoPortrait()) "HH:mm:ss.SSS" else ISO_LANDSCAPE_PATTERN
+        val timePat: String = if (settings.timeFormat == 0) {
+            if (isIsoPortrait()) "HH:mm:ss.SSS" else ISO_LANDSCAPE_PATTERN
         } else {
-            timePat = settings.buildTimePattern()
+            settings.buildTimePattern()
         }
+        val timeOnlyPat: String = if (settings.timeFormat == 0) "HH:mm:ss.SSS" else settings.buildTimePattern()
 
         val timeFormat = SimpleDateFormat(timePat, Locale.ENGLISH)
         val dateOnlyFormat = SimpleDateFormat(settings.datePattern, Locale.ENGLISH)
-        val timeOnlyFormat = SimpleDateFormat(timePat, Locale.ENGLISH)
+        val timeOnlyFormat = SimpleDateFormat(timeOnlyPat, Locale.ENGLISH)
         if (settings.showUtc) {
             val utc = TimeZone.getTimeZone("UTC")
             timeFormat.timeZone = utc
@@ -118,10 +140,11 @@ class MainActivity : AppCompatActivity() {
                     val ip = isIsoPortrait()
                     if (settings.timeFormat == 0) {
                         timeFormat.applyPattern(if (ip) "HH:mm:ss.SSS" else ISO_LANDSCAPE_PATTERN)
-                        timeOnlyFormat.applyPattern(if (ip) "HH:mm:ss.SSS" else ISO_LANDSCAPE_PATTERN)
+                        timeOnlyFormat.applyPattern("HH:mm:ss.SSS")
                     } else {
-                        timeFormat.applyPattern(settings.buildTimePattern())
-                        timeOnlyFormat.applyPattern(settings.buildTimePattern())
+                        val pat = settings.buildTimePattern()
+                        timeFormat.applyPattern(pat)
+                        timeOnlyFormat.applyPattern(pat)
                     }
                     dateOnlyFormat.applyPattern(settings.datePattern)
                     val interval = computeUpdateInterval()
@@ -152,16 +175,6 @@ class MainActivity : AppCompatActivity() {
         return Math.max(8L, Math.round(1000f / refreshRate).toLong())
     }
 
-    private fun getContrastingTextColor(color: Int): Int {
-        val luminance = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255.0
-        return if (luminance > 0.5) Color.BLACK else Color.WHITE
-    }
-
-    private fun adjustAlpha(color: Int, alpha: Float): Int {
-        val alphaInt = Math.round(Color.alpha(color) * alpha)
-        return (color and 0x00FFFFFF) or (alphaInt shl 24)
-    }
-
     private fun stopClockUpdates() {
         updatesActive = false
         updateHandler.removeCallbacksAndMessages(null)
@@ -175,7 +188,6 @@ class MainActivity : AppCompatActivity() {
     ) {
         val mode = settings.clockMode
         val showDate = settings.showDate
-        val showSec = settings.showSeconds
 
         if (!RealTime.isInitialized()) {
             val wait = getString(R.string.waiting_for_gps)
@@ -252,27 +264,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateSyncInfo()
-
-        val appColor = settings.getAccentColor(this)
-        when (mode) {
-            Settings.CLOCK_MODE_DIGITAL -> {
-                binding.txtTime.setTextColor(appColor)
-                binding.txtStatus.setTextColor(appColor)
-                binding.txtDate.setTextColor(appColor)
-            }
-            Settings.CLOCK_MODE_ANALOG -> {
-                binding.analogClock.setAccentColor(appColor)
-                binding.analogClock.setRimColor(appColor)
-                binding.txtAnalogTime.setTextColor(appColor)
-            }
-            Settings.CLOCK_MODE_BOTH -> {
-                binding.analogClockBoth.setAccentColor(appColor)
-                binding.analogClockBoth.setRimColor(appColor)
-                binding.txtBothTime.setTextColor(appColor)
-                binding.txtBothStatus.setTextColor(appColor)
-                binding.txtBothDate.setTextColor(appColor)
-            }
-        }
     }
 
     private fun setClockModeVisible(mode: Int) {
@@ -293,22 +284,55 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyUiColors() {
         val accentColor = settings.getAccentColor(this)
-        val contrast = getContrastingTextColor(accentColor)
+        val baseWindowBg = MaterialColors.getColor(binding.root, R.attr.clockBackgroundColor, Color.WHITE)
+        val rootBg = ColorUtils.compositeColors(UiColorUtils.adjustAlpha(accentColor, 0.05f), baseWindowBg)
+        binding.root.setBackgroundColor(rootBg)
 
-        binding.root.setBackgroundColor(adjustAlpha(accentColor, 0.05f))
-        binding.txtSyncInfo.setTextColor(accentColor)
+        val baseCardBg = MaterialColors.getColor(binding.cardTime, R.attr.clockCardBackgroundColor, Color.LTGRAY)
+        val cardBg = ColorUtils.compositeColors(UiColorUtils.adjustAlpha(accentColor, 0.08f), baseCardBg)
+        binding.cardTime.setCardBackgroundColor(cardBg)
+        binding.cardBoth.setCardBackgroundColor(cardBg)
 
-        binding.cardTime.setCardBackgroundColor(adjustAlpha(accentColor, 0.08f))
-        binding.cardBoth.setCardBackgroundColor(adjustAlpha(accentColor, 0.08f))
+        val contrastOnAccent = UiColorUtils.getContrastingTextColor(accentColor)
         binding.btnSettings.backgroundTintList = ColorStateList.valueOf(accentColor)
-        binding.btnSettings.setTextColor(contrast)
-        binding.btnClearCache.backgroundTintList = ColorStateList.valueOf(adjustAlpha(accentColor, 0.20f))
-        binding.btnClearCache.setTextColor(contrast)
+        binding.btnSettings.setTextColor(contrastOnAccent)
 
-        binding.analogClock.setFaceColor(adjustAlpha(accentColor, 0.12f))
-        binding.analogClockBoth.setFaceColor(adjustAlpha(accentColor, 0.12f))
-        binding.analogClock.setAccentColor(accentColor)
-        binding.analogClockBoth.setAccentColor(accentColor)
+        val clearCacheBg = ColorUtils.compositeColors(UiColorUtils.adjustAlpha(accentColor, 0.20f), rootBg)
+        val clearCacheTextColor = UiColorUtils.ensureContrast(accentColor, clearCacheBg, minContrast = 4.5)
+        binding.btnClearCache.backgroundTintList = ColorStateList.valueOf(UiColorUtils.adjustAlpha(accentColor, 0.20f))
+        binding.btnClearCache.setTextColor(clearCacheTextColor)
+
+        val syncInfoColor = UiColorUtils.ensureContrast(accentColor, rootBg, minContrast = 4.5)
+        binding.txtSyncInfo.setTextColor(syncInfoColor)
+
+        val primaryTextColor = UiColorUtils.ensureContrast(accentColor, cardBg, minContrast = 4.5)
+        val secondaryTextColor = UiColorUtils.ensureContrast(UiColorUtils.adjustAlpha(accentColor, 0.80f), cardBg, minContrast = 3.5)
+
+        binding.txtTime.setTextColor(primaryTextColor)
+        binding.txtStatus.setTextColor(secondaryTextColor)
+        binding.txtDate.setTextColor(secondaryTextColor)
+
+        binding.txtBothTime.setTextColor(primaryTextColor)
+        binding.txtBothStatus.setTextColor(secondaryTextColor)
+        binding.txtBothDate.setTextColor(secondaryTextColor)
+
+        val analogTimeColor = UiColorUtils.ensureContrast(accentColor, rootBg, minContrast = 4.5)
+        binding.txtAnalogTime.setTextColor(analogTimeColor)
+
+        val dialColor = ColorUtils.compositeColors(UiColorUtils.adjustAlpha(accentColor, 0.12f), baseCardBg)
+        val clockAccent = UiColorUtils.ensureContrast(accentColor, dialColor, minContrast = 4.5)
+        val clockRim = UiColorUtils.ensureContrast(accentColor, rootBg, minContrast = 3.0)
+        val clockTick = UiColorUtils.ensureContrast(MaterialColors.getColor(binding.root, R.attr.clockTextColor, Color.DKGRAY), dialColor, minContrast = 3.5)
+
+        binding.analogClock.setFaceColor(dialColor)
+        binding.analogClock.setAccentColor(clockAccent)
+        binding.analogClock.setRimColor(clockRim)
+        binding.analogClock.setTickColor(clockTick)
+
+        binding.analogClockBoth.setFaceColor(dialColor)
+        binding.analogClockBoth.setAccentColor(clockAccent)
+        binding.analogClockBoth.setRimColor(clockRim)
+        binding.analogClockBoth.setTickColor(clockTick)
     }
 
     private fun updateSyncInfo() {
@@ -338,11 +362,11 @@ class MainActivity : AppCompatActivity() {
         val font = settings.font
         val tf = getTypefaceForFont(font)
 
-        binding.txtTime.typeface = tf
-        binding.txtDate.typeface = null
-        binding.txtBothTime.typeface = tf
-        binding.txtBothDate.typeface = null
-        binding.txtAnalogTime.typeface = tf
+        binding.txtTime.setTypeface(tf, Typeface.BOLD)
+        binding.txtDate.setTypeface(null, Typeface.NORMAL)
+        binding.txtBothTime.setTypeface(tf, Typeface.BOLD)
+        binding.txtBothDate.setTypeface(null, Typeface.NORMAL)
+        binding.txtAnalogTime.setTypeface(tf, Typeface.NORMAL)
     }
 
     private fun getTypefaceForFont(font: String): Typeface? {
