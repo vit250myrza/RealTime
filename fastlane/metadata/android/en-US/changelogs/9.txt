@@ -1,0 +1,5 @@
+- Material You dynamic colors
+- New app icon
+- Landscape mode shows the date and full ISO 8601 timestamp, status bar hidden
+- Fixed visual bugs in themes, contrast, layouts, and analog clock
+- Removed the time color setting (dynamic colors handle it)
